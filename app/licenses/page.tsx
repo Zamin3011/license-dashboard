@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   collection,
   getDocs,
-  addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   doc
@@ -48,7 +48,7 @@ export default function Licenses() {
 
     setLoading(true);
 
-    await addDoc(collection(db, "license_keys"), {
+    await setDoc(doc(db, "license_keys", key), {
       key,
       distributor_id: selectedDistributor || null,
       expires_at: "2026-12-31",
