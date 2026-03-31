@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
+/* 🌙 FORCE DARK THEME */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0f172a;   /* main dark */
+  --foreground: #ffffff;   /* primary text */
 }
 
+/* Optional theme system (keep clean) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ❌ REMOVE auto light/dark switching (causes mismatch) */
+/* We control theme manually for SaaS consistency */
 
+/* GLOBAL BODY STYLE */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 🔥 SCROLLBAR (optional but premium feel) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
