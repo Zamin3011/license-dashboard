@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   collection,
   getDocs,
+  onSnapshot,
   deleteDoc,
   doc,
   updateDoc
@@ -13,34 +14,24 @@ import { db } from "@/lib/firebase";
 export default function Devices() {
   const [devices, setDevices] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [distributors, setDistributors] = useState<any[]>([]);
 
-  async function load() {
-    const snap = await getDocs(collection(db, "licensed_devices"));
-
-    const data: any[] = [];
-
-    snap.forEach(d => {
-      data.push({
-        id: d.id,
-        ...d.data()
-      });
+  async function updateDistributor(deviceId: string, distributorId: string) {
+    await updateDoc(doc(db, "licensed_devices", deviceId), {
+      distributor_id: distributorId
     });
-
-    setDevices(data);
   }
 
   async function removeDevice(id: string) {
     if (!confirm("Delete this device?")) return;
 
     await deleteDoc(doc(db, "licensed_devices", id));
-    load();
   }
 
   async function toggleDevice(id: string, current: boolean) {
     await updateDoc(doc(db, "licensed_devices", id), {
       active: !current
     });
-    load();
   }
 
   async function extendExpiry(id: string) {
@@ -51,11 +42,17 @@ export default function Devices() {
       expires_at: newDate
     });
 
-    load();
   }
 
   function getStatus(device: any) {
     const now = new Date();
+
+    const distributor = distributors.find(
+      (d) => d.id === device.distributor_id
+    );
+
+    // 🔥 If distributor disabled → device inactive
+    if (distributor && !distributor.active) return "Inactive";
 
     if (!device.active) return "Inactive";
 
@@ -79,7 +76,42 @@ export default function Devices() {
   );
 
   useEffect(() => {
-    load();
+    const unsubscribeDevices = onSnapshot(
+      collection(db, "licensed_devices"),
+      (snap) => {
+        const data: any[] = [];
+
+        snap.forEach(d => {
+          data.push({
+            id: d.id,
+            ...d.data()
+          });
+        });
+
+        setDevices(data);
+      }
+    );
+
+    const unsubscribeDistributors = onSnapshot(
+      collection(db, "distributors"),
+      (snap) => {
+        const distData: any[] = [];
+
+        snap.forEach(d => {
+          distData.push({
+            id: d.id,
+            ...d.data()
+          });
+        });
+
+        setDistributors(distData);
+      }
+    );
+
+    return () => {
+      unsubscribeDevices();
+      unsubscribeDistributors();
+    };
   }, []);
 
   return (
@@ -104,6 +136,7 @@ export default function Devices() {
             <tr>
               <th className="px-4 py-3 text-left">Device</th>
               <th className="px-4 py-3 text-left">Name</th>
+              <th className="px-4 py-3 text-left">Distributor</th>
               <th className="px-4 py-3 text-left">License</th>
               <th className="px-4 py-3 text-left">Last Seen</th>
               <th className="px-4 py-3 text-left">Expiry</th>
@@ -125,6 +158,22 @@ export default function Devices() {
 
                   <td className="px-4 py-3 text-gray-300">
                     {d.device_label || "-"}
+                  </td>
+
+                  {/* ✅ DISTRIBUTOR DROPDOWN */}
+                  <td className="px-4 py-3">
+                    <select
+                      value={d.distributor_id || ""}
+                      onChange={(e) => updateDistributor(d.id, e.target.value)}
+                      className="bg-[#1e293b] border border-gray-600 rounded px-2 py-1 text-sm"
+                    >
+                      <option value="">None</option>
+                      {distributors.map(dist => (
+                        <option key={dist.id} value={dist.id}>
+                          {dist.name}
+                        </option>
+                      ))}
+                    </select>
                   </td>
 
                   <td className="px-4 py-3 text-blue-400">
