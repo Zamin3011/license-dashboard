@@ -41,10 +41,14 @@ export default function Dashboard() {
       licSnap.forEach(doc => {
         total++;
         const data = doc.data();
-        const expiry = new Date(data.expires_at);
+        let expiry = null;
+
+        if (data.expires_at) {
+          expiry = new Date(data.expires_at);
+        }
 
         if (!data.active) disabled++;
-        else if (expiry < now) expired++;
+        else if (expiry && expiry < now) expired++;
         else active++;
       });
 
@@ -83,6 +87,7 @@ export default function Dashboard() {
         activeDistributors,
       });
 
+      recent.sort((a, b) => b.last_seen - a.last_seen);
       setRecentDevices(recent.slice(0, 5));
     }
 
