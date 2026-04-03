@@ -24,6 +24,12 @@ export default function Dashboard() {
       const devSnap = await getDocs(collection(db, "licensed_devices"));
       const distSnap = await getDocs(collection(db, "distributors"));
 
+      const distributorMap: any = {};
+
+      distSnap.forEach(doc => {
+        distributorMap[doc.id] = doc.data().name;
+      });
+
       let total = 0;
       let active = 0;
       let expired = 0;
@@ -66,6 +72,7 @@ export default function Dashboard() {
             recent.push({
               device_id: d.device_id,
               license_key: d.license_key,
+              distributor: distributorMap[d.distributor_id] || "None",
               last_seen: last
             });
           }
@@ -140,6 +147,7 @@ export default function Dashboard() {
             <tr>
               <th className="text-left py-2">Device</th>
               <th className="text-left py-2">License</th>
+              <th className="text-left py-2">Distributor</th> 
               <th className="text-left py-2">Last Seen</th>
             </tr>
           </thead>
@@ -154,6 +162,10 @@ export default function Dashboard() {
 
                 <td className="text-blue-400">
                   {d.license_key}
+                </td>
+
+                <td className="text-purple-400">
+                  {d.distributor}
                 </td>
 
                 <td className="text-gray-300">
