@@ -22,20 +22,34 @@ export default function Distributors() {
     const snap = await getDocs(collection(db, "distributors"));
     const data: any[] = [];
 
+        // 🔥 Load ALL devices ONCE (outside loop)
+    const allDevicesSnap = await getDocs(collection(db, "licensed_devices"));
+
     for (let d of snap.docs) {
       const dist = { id: d.id, ...d.data() };
 
-      // 🔥 get usage
-      const devicesSnap = await getDocs(
+      // 🔥 STEP 1: get licenses of this distributor
+      const licensesSnap = await getDocs(
         query(
-          collection(db, "licensed_devices"),
+          collection(db, "license_keys"),
           where("distributor_id", "==", d.id)
         )
       );
 
+      const licenseKeys = licensesSnap.docs.map(l => l.data().key);
+
+      // 🔥 STEP 2: count devices using those licenses (no extra DB call)
+      let used = 0;
+
+      allDevicesSnap.forEach(dev => {
+        if (licenseKeys.includes(dev.data().license_key)) {
+          used++;
+        }
+      });
+
       data.push({
         ...dist,
-        used: devicesSnap.size
+        used
       });
     }
 
