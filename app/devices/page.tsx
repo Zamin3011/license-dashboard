@@ -56,9 +56,13 @@ export default function Devices() {
 
   function getStatus(device: any) {
     const now = new Date();
-    const expiry = new Date(device.expires_at);
 
     if (!device.active) return "Inactive";
+
+    if (!device.expires_at) return "Active";
+
+    const expiry = new Date(device.expires_at);
+
     if (expiry < now) return "Expired";
 
     return "Active";
